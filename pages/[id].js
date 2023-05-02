@@ -15,6 +15,7 @@ export const Text = ({ text }) => {
       text,
     } = value;
     return (
+      <p>
       <span
         className={[
           bold ? styles.bold : "",
@@ -28,6 +29,7 @@ export const Text = ({ text }) => {
       >
         {text.link ? <a href={text.link.url}>{text.content}</a> : text.content}
       </span>
+      </p>
     );
   });
 };

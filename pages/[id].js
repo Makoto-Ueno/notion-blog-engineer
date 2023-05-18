@@ -64,15 +64,25 @@ const renderBlock = (block) => {
       );
     case "heading_2":
       return (
-        <h2>
-          <Text text={value.rich_text} />
-        </h2>
+        <div>
+          <h2>
+            <Text text={value.rich_text} />
+          </h2>
+          {block.children?.map((child) => (
+            <Fragment key={child.id}>{renderBlock(child)}</Fragment>
+          ))}
+        </div>
       );
     case "heading_3":
       return (
-        <h3>
-          <Text text={value.rich_text} />
-        </h3>
+        <div>
+          <h3>
+            <Text text={value.rich_text} />
+          </h3>
+          {block.children?.map((child) => (
+            <Fragment key={child.id}>{renderBlock(child)}</Fragment>
+          ))}
+        </div>
       );
     case "bulleted_list": {
       return <ul>{value.children.map((child) => renderBlock(child))}</ul>;
@@ -99,14 +109,14 @@ const renderBlock = (block) => {
       );
     case "toggle":
       return (
-        <details>
+        <div className={styles.toggle}>
           <summary>
             <Text text={value.rich_text} />
           </summary>
           {block.children?.map((child) => (
             <Fragment key={child.id}>{renderBlock(child)}</Fragment>
           ))}
-        </details>
+        </div>
       );
     case "child_page":
       return (
@@ -193,6 +203,20 @@ const renderBlock = (block) => {
     }
     case "column": {
       return <div>{block.children.map((child) => renderBlock(child))}</div>;
+    }
+    case "callout": {
+      return (
+        <div>
+          <p>{value.icon.emoji}<Text text={value.rich_text} /></p>
+        </div>
+      )
+    }
+    case "table_of_contents": {
+      return (
+        <div>
+          <p><Text text={value.rich_text} /></p>
+        </div>
+      )
     }
     default:
       return `❌ Unsupported block (${

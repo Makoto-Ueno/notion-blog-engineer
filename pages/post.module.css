@@ -125,6 +125,10 @@
   border-radius: 12px;
 }
 
+.toggle {
+  background-color: blue;
+}
+
 @media (prefers-color-scheme: dark) {
   .code,
   .table,

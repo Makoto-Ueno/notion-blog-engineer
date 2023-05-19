@@ -4,6 +4,11 @@ import { getDatabase, getPage, getBlocks } from "../lib/notion";
 import Link from "next/link";
 import { databaseId } from "./index.js";
 import styles from "./post.module.css";
+import Router from 'next/router';
+
+const handler = (path) => {
+  Router.push(path)
+}
 
 export const Text = ({ text }) => {
   if (!text) {
@@ -32,6 +37,25 @@ export const Text = ({ text }) => {
   });
 };
 
+const Callout = ({ text }) => {
+  if (!text) {
+    return null;
+  }
+  return text.map((value) => {
+    const {
+      annotations: { bold, code, color, italic, strikethrough, underline },
+      text,
+    } = value;
+    return (
+      <div className={styles.outer}>
+        <button className={styles.btn} onClick={() => handler(text.link.url)}>
+          {text.content}
+        </button>
+      </div>
+    );
+  });
+};
+
 const renderNestedList = (block) => {
   const { type } = block;
   const value = block[type];
@@ -45,16 +69,44 @@ const renderNestedList = (block) => {
   return <ul>{value.children.map((block) => renderBlock(block))}</ul>;
 };
 
-const renderBlock = (block) => {
+var h2count = 0;
+const TableOfContents = (block) => {
+  const { type, id } = block;
+  const value = block[type];
+
+  switch(type) {
+    case "heading_2":
+      h2count++
+      return (
+        <a href={`#${id}`}>
+          <p>{h2count}.&nbsp;
+            <Text text={value.rich_text} />
+          </p>
+        </a>
+      );
+      case "heading_3":
+        return (
+          <a href={`#${id}`}>
+            <li className={styles.table_of_contents_h3}>
+              <Text text={value.rich_text} />
+            </li>
+        </a>
+      );
+    }
+};
+
+const renderBlock = (block, blocks) => {
   const { type, id } = block;
   const value = block[type];
 
   switch (type) {
     case "paragraph":
       return (
+        value.rich_text != "" ?
         <p>
           <Text text={value.rich_text} />
         </p>
+        : <br/>
       );
     case "heading_1":
       return (
@@ -65,7 +117,7 @@ const renderBlock = (block) => {
     case "heading_2":
       return (
         <div>
-          <h2>
+          <h2 id={id}>
             <Text text={value.rich_text} />
           </h2>
           {block.children?.map((child) => (
@@ -75,14 +127,22 @@ const renderBlock = (block) => {
       );
     case "heading_3":
       return (
-        <div>
-          <h3>
-            <Text text={value.rich_text} />
-          </h3>
+        <div id={id}>
+          <div className={styles.h3_container}>
+            <h3>
+              <Text text={value.rich_text} />
+            </h3>
+          </div>
           {block.children?.map((child) => (
             <Fragment key={child.id}>{renderBlock(child)}</Fragment>
           ))}
         </div>
+      );
+    case "quote":
+      return (
+        <h4>
+          <Text text={value.rich_text} />
+        </h4>
       );
     case "bulleted_list": {
       return <ul>{value.children.map((child) => renderBlock(child))}</ul>;
@@ -109,13 +169,15 @@ const renderBlock = (block) => {
       );
     case "toggle":
       return (
-        <div className={styles.toggle}>
-          <summary>
+        <div>
+          <div className={styles.gray}>
             <Text text={value.rich_text} />
-          </summary>
-          {block.children?.map((child) => (
-            <Fragment key={child.id}>{renderBlock(child)}</Fragment>
-          ))}
+          </div>
+            <div className={styles.gray_background}>
+              {block.children?.map((child) => (
+                <Fragment key={child.id}>{renderBlock(child)}</Fragment>
+              ))}
+            </div>
         </div>
       );
     case "child_page":
@@ -137,8 +199,6 @@ const renderBlock = (block) => {
       );
     case "divider":
       return <hr key={id} />;
-    case "quote":
-      return <blockquote key={id}>{value.rich_text[0].plain_text}</blockquote>;
     case "code":
       return (
         <pre className={styles.pre}>
@@ -207,14 +267,15 @@ const renderBlock = (block) => {
     case "callout": {
       return (
         <div>
-          <p>{value.icon.emoji}<Text text={value.rich_text} /></p>
+            <Callout text={value.rich_text} />
         </div>
-      )
+      );
     }
     case "table_of_contents": {
       return (
-        <div>
-          <p><Text text={value.rich_text} /></p>
+        <div className={styles.table_of_contents}>
+          <div>目次</div>
+          {blocks.map((block) => TableOfContents(block))}
         </div>
       )
     }
@@ -233,7 +294,7 @@ export default function Post({ page, blocks }) {
     <div>
       <Head>
         <title>{page.properties.Name.title[0].plain_text}</title>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/makoto.jpeg" />
       </Head>
 
       <article className={styles.container}>
@@ -242,11 +303,12 @@ export default function Post({ page, blocks }) {
         </h1>
         <section>
           {blocks.map((block) => (
-            <Fragment key={block.id}>{renderBlock(block)}</Fragment>
+            <Fragment key={block.id}>{renderBlock(block, blocks)}</Fragment>
           ))}
-          <Link href="/" className={styles.back}>
+          {/* <Link href="/" className={styles.back}>
             ← Go home
-          </Link>
+          </Link> */}
+          <div className={styles.last}></div>
         </section>
       </article>
     </div>

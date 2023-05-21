@@ -290,6 +290,7 @@ export default function Post({ page, blocks }) {
   if (!page || !blocks) {
     return <div />;
   }
+  console.log(page.properties);
   return (
     <div>
       <Head>
@@ -301,6 +302,9 @@ export default function Post({ page, blocks }) {
         <h1 className={styles.name}>
           <Text text={page.properties.Name.title} />
         </h1>
+        <figure>
+          <img src="/5month.png" />
+        </figure>
         <section>
           {blocks.map((block) => (
             <Fragment key={block.id}>{renderBlock(block, blocks)}</Fragment>

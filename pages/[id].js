@@ -5,6 +5,7 @@ import Link from "next/link";
 import { databaseId } from "./index.js";
 import styles from "./post.module.css";
 import Router from 'next/router';
+import Toc from './toc';
 
 const handler = (path) => {
   Router.push(path)
@@ -41,13 +42,13 @@ const Callout = ({ text }) => {
   if (!text) {
     return null;
   }
-  return text.map((value) => {
+  return text.map((value, index) => {
     const {
       annotations: { bold, code, color, italic, strikethrough, underline },
       text,
     } = value;
     return (
-      <div className={styles.outer}>
+      <div className={styles.outer} key={index}>
         <button className={styles.btn} onClick={() => handler(text.link.url)}>
           {text.content}
         </button>
@@ -95,7 +96,7 @@ const TableOfContents = (block) => {
     }
 };
 
-const renderBlock = (block, blocks) => {
+const renderBlock = (block) => {
   const { type, id } = block;
   const value = block[type];
 
@@ -273,10 +274,8 @@ const renderBlock = (block, blocks) => {
     }
     case "table_of_contents": {
       return (
-        <div className={styles.table_of_contents}>
-          <div>目次</div>
-          {blocks.map((block) => TableOfContents(block))}
-        </div>
+        //<Toc />
+        <div></div>
       )
     }
     default:
@@ -290,9 +289,8 @@ export default function Post({ page, blocks }) {
   if (!page || !blocks) {
     return <div />;
   }
-  console.log(page.properties);
   return (
-    <div>
+    <div className="content">
       <Head>
         <title>{page.properties.Name.title[0].plain_text}</title>
         <link rel="icon" href="/makoto.jpeg" />
@@ -307,7 +305,7 @@ export default function Post({ page, blocks }) {
         </figure>
         <section>
           {blocks.map((block) => (
-            <Fragment key={block.id}>{renderBlock(block, blocks)}</Fragment>
+            <Fragment key={block.id}>{renderBlock(block)}</Fragment>
           ))}
           {/* <Link href="/" className={styles.back}>
             ← Go home
